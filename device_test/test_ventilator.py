@@ -9,13 +9,13 @@ import time
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(3,GPIO.OUT)
+GPIO.setup(27,GPIO.OUT)
 
 for i in range(0,5):
-    GPIO.output(3,True)
-    time.sleep(4)
-    GPIO.output(3,False)
-    time.sleep(3)
+    GPIO.output(27,True)
+    time.sleep(2)
+    GPIO.output(27,False)
+    time.sleep(1)
     
 print("Test finished...")
 print("Test succeeded if ventilator was activated 5 times.")

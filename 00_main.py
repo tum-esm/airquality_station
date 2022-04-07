@@ -1,6 +1,7 @@
-#import ec_sense
+import ec_sense
 from guizero import App, Box, Text, PushButton, CheckBox
 from datetime import date, datetime
+
 
 #set main colors
 main_bg = "#E5E5EA"
@@ -63,22 +64,13 @@ start_button = PushButton(settings_sub, command = start, text="start")
 stop_button = PushButton(settings_sub, command = stop, text="stop", enabled = False)
 
 
-
 # status boxes
 status = Box(app, grid=[1,1])
 
 CheckBox(status, text = "test", enabled= True)
 
-
-
 # messages box shows warnigs and messages from the system
 messages = Box(app, layout = "grid", grid = [0,1])
-
-
-
-
-
-
 
 
 

@@ -21,7 +21,7 @@ GPIO.setup(27,GPIO.OUT)
 
 #init sensors and serial ports
 ec1 = ec_sensor('/dev/ttyS0') #No2 Sensor
-#ec2 = ec_sensor('/dev/ttyAMA1') #O3 Sensor
+ec2 = ec_sensor('/dev/ttyAMA1') #O3 Sensor
 ec3 = ec_sensor('/dev/ttyAMA2') #CO Sensor
 
 #global variable to keep the measurement runnig 
@@ -41,7 +41,7 @@ def measure(db_connection, interval):
     cursor = db_connection.cursor()
     
     while keep_going:
-        dat = vent_meas_cycle(8,4)
+        dat = vent_meas_cycle(10,3)
         timestamp = datetime.now()
         
         # insert data to database
@@ -73,7 +73,7 @@ def measure_airquality(iterations=1, delay=0):
     
     for i in range (1, iterations):
         dat1 = ec1.read_sensor()
-        dat2 = ec3.read_sensor()
+        dat2 = ec2.read_sensor()
         dat3 = ec3.read_sensor()
         
         temp[0] = temp[0] + dat1[0]
@@ -85,30 +85,30 @@ def measure_airquality(iterations=1, delay=0):
         time.sleep(delay)
         
     values = {ec1.sensor_type:(temp[0]/iterations),
-              ec3.sensor_type:(temp[1]/iterations),
+              ec2.sensor_type:(temp[1]/iterations),
               ec3.sensor_type:(temp[2]/iterations),
               'temperature':(temp[3]/(3*iterations)),
               'humidity':(temp[4]/(3*iterations))}
         
     return values
 
-def vent_meas_cycle(vent_time=5, wait_time=2):
+def vent_meas_cycle(vent_time=8, wait_time=3):
     GPIO.output(27,True)
     time.sleep(vent_time)
     GPIO.output(27,False)
     time.sleep(wait_time)
     
-    return measure_airquality(5,0.1)
+    return measure_airquality(5,0.5)
 
 # test class
 if __name__ == "__main__":
     
     print('Air quality measurement station v1.1 (no GUI)')
-    con = sqlite3.connect('data/airquality.db')
+    con = sqlite3.connect('device_data/airquality.db')
     print('Connected to airquality database')
     print('Press any key to close the program...')
     
-    measure(con, 10)
+    measure(con, 5)
     
     
     #commit data and close the database

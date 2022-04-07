@@ -134,7 +134,7 @@ class ec_sensor:
         
 # test class
 if __name__ == "__main__":
-    port = '/dev/ttyAMA2'
+    port = '/dev/ttyS0'
     ec = ec_sensor(port)
     
     print('{} Sensor at port {}'.format(ec.sensor_type, port))
