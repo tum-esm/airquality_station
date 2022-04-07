@@ -8,5 +8,5 @@ activated in the raspberry config file:
 
 1. open the config file with 'sudo nano /boot/config.txt'
 2. add following lines to the file: 'enable_uart =1', 'dtoverlay=uart2', 
-'dtoverlay=uart3'
+'dtoverlay=uart3'. Make sure that the serial port 1 is not routed to the serial console. Check the raspberry pi config. 
 3. Save and close the file with 'Str + x'
