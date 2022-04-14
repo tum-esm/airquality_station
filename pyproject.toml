@@ -5,10 +5,10 @@ description = "package for raspberrypi airquality station with ecsense sensors"
 authors = ["Daniel Kühbacher"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
-pandas = "^1.4.2"
-numpy = "^1.22.3"
-matplotlib = "0"
+python = "3.9"
+pandas = "1.4.2"
+numpy = "1.22.3"
+matplotlib = "3.3.2"
 jupyter = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
