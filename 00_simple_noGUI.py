@@ -11,8 +11,8 @@ import RPi.GPIO as GPIO
 import time
 import logging
 import sqlite3
-
 import threading as th
+
 from datetime import datetime
 from ec_sense import ec_sensor
 
@@ -38,7 +38,7 @@ def measure_airquality(db_connection, vent_time=5, wait_time=2):
     # connect to database
     cursor = db_connection.cursor()
     
-    dat = vent_meas_cycle(vent_time, wait_time)
+    dat = vent_meas_cycle(vent_time, wait_time,iterations=5)
     timestamp = datetime.now()
     
     # insert data to database
@@ -60,7 +60,7 @@ def measure_airquality(db_connection, vent_time=5, wait_time=2):
     db_connection.commit() # safe data in database
 
     # make logging message
-    logging.info("Measurement : NO2: %f ppm | O3: %f ppb | CO: %f ppm", dat['NO2'], dat['O3'], dat['CO'])
+    logging.info("Measurement : NO2: {} ppm | O3: {}  ppb | CO: {} ppm".format(dat['NO2'],dat['O3'],dat['CO']))
 
 
 def vent_meas_cycle(vent_time=3, wait_time=3, iterations=1):
@@ -109,7 +109,17 @@ if __name__ == "__main__":
     #### Start of the measurements
     logging.info("Main    : Starting measurements.")
 
-    measure_airquality(con)
+    # shut run as a thread we are waiting for
+    meas = th.Thread(target=measure_airquality, args=(con,))
+
+    loop_forever = True
+    while loop_forever:
+        try:
+            meas.start()
+            time.sleep(10)
+        except KeyboardInterrupt:
+            meas.join()
+            loop_forever = False
 
     #commit data and close the database
     con.close()
