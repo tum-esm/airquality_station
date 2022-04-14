@@ -98,6 +98,10 @@ class measure_airquality:
             
             return values
 
+        def __del__(self):
+            self.con.close()
+            GPIO.cleanup()
+
 if __name__ == "__main__":
 
     print('Air quality measurement station v1.1 (no GUI)')
@@ -109,18 +113,16 @@ if __name__ == "__main__":
     #### Start of the measurements
     logging.info("Main    : Starting measurements.")
 
-    sensors = measure_airquality()
+    measurement_obj = measure_airquality()
 
     loop_forever = True
     while loop_forever:
         try:
-            sensors.measure()
+            measurement_obj.measure()
             time.sleep(30)
         except KeyboardInterrupt:
             loop_forever = False
 
-    #commit data and close the database
-    con.close()
-    GPIO.cleanup()
-    
+    del measurement_obj
+
     print("Program end") 
