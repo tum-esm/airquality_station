@@ -21,5 +21,4 @@ Since the display is rotated 180° one has to invert the display and then touch 
 3. Follow this instruction (link instruction) to invert the touch input. 
 
 ### Install python packages
-1. If pip is not installed (check with `pip --version`) install pip with `sudo apt-get install pip`
-2. Install with poetry with `pip install poetry`
+-> coming soon

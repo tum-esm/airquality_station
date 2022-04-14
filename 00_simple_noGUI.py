@@ -9,7 +9,9 @@ sqlite database.
 
 import RPi.GPIO as GPIO
 import time
+import logging
 import sqlite3
+
 import threading as th
 from datetime import datetime
 from ec_sense import ec_sensor
@@ -24,53 +26,55 @@ ec1 = ec_sensor('/dev/ttyS0') #No2 Sensor
 ec2 = ec_sensor('/dev/ttyAMA1') #O3 Sensor
 ec3 = ec_sensor('/dev/ttyAMA2') #CO Sensor
 
-#global variable to keep the measurement runnig 
-keep_going = True
-
-#thread for key capture to close the while being in a while loop
-def key_capture_thread():
-    global keep_going
-    input()
-    keep_going=False
-
 #main thread with while loop
-def measure(db_connection, interval):
-    th.Thread(target = key_capture_thread, args = (),
-              name = "capture_tread", daemon = True).start()
-    
+def measure_airquality(db_connection, vent_time=5, wait_time=2):
+    """
+        Description: main function for measuring air quality
+        Paramerters: db_connection - database connection object
+                     interval - sleep time between two consecutive measurements
+        Return: list of averaged sensor values in the following order: gas, temperature, humidity
+    """
+
+    # connect to database
     cursor = db_connection.cursor()
     
-    while keep_going:
-        dat = vent_meas_cycle(10,3)
-        timestamp = datetime.now()
-        
-        # insert data to database
-        insert_query = """INSERT INTO {} (timestamp, value, unit, temperature, humidity)
-                        VALUES(?,?,?,?,?)"""
-        
-        cursor.execute(insert_query.format('NO2'),
-                       (timestamp, dat['NO2'], 'ppm',
-                        dat['temperature'], dat['humidity']))
-        
-        cursor.execute(insert_query.format('O3'),
-                       (timestamp, dat['O3'], 'ppb',
-                        dat['temperature'], dat['humidity']))
-        
-        cursor.execute(insert_query.format('CO'),
-                       (timestamp, dat['CO'], 'ppm',
-                        dat['temperature'], dat['humidity']))
-        
-        db_connection.commit()
-
-        # safe data in database
-        time.sleep(interval)
-        
-
-def measure_airquality(iterations=1, delay=0):
+    dat = vent_meas_cycle(vent_time, wait_time)
+    timestamp = datetime.now()
     
+    # insert data to database
+    insert_query = """INSERT INTO {} (timestamp, value, unit, temperature, humidity)
+                    VALUES(?,?,?,?,?)"""
+    
+    cursor.execute(insert_query.format('NO2'),
+                    (timestamp, dat['NO2'], 'ppm',
+                    dat['temperature'], dat['humidity']))
+    
+    cursor.execute(insert_query.format('O3'),
+                    (timestamp, dat['O3'], 'ppb',
+                    dat['temperature'], dat['humidity']))
+    
+    cursor.execute(insert_query.format('CO'),
+                    (timestamp, dat['CO'], 'ppm',
+                    dat['temperature'], dat['humidity']))
+    
+    db_connection.commit() # safe data in database
+
+    # make logging message
+    logging.info("Measurement : NO2: %f ppm | O3: %f ppb | CO: %f ppm", dat['NO2'], dat['O3'], dat['CO'])
+
+
+def vent_meas_cycle(vent_time=3, wait_time=3, iterations=1):
+
+    # ventilate channel 
+    GPIO.output(27,True)
+    time.sleep(vent_time)
+    GPIO.output(27,False)
+    time.sleep(wait_time)
+
     #array to save values
     temp=[0,0,0,0,0]
     
+    # make i consecutive measurements and calculate average value
     for i in range (1, iterations):
         dat1 = ec1.read_sensor()
         dat2 = ec2.read_sensor()
@@ -82,35 +86,31 @@ def measure_airquality(iterations=1, delay=0):
         temp[3] = temp[3] + dat1[1]+dat2[1]+dat3[1]
         temp[4] = temp[4] + dat1[2]+dat2[2]+dat3[2]
         
-        time.sleep(delay)
+        time.sleep(0.1)
         
     values = {ec1.sensor_type:(temp[0]/iterations),
               ec2.sensor_type:(temp[1]/iterations),
               ec3.sensor_type:(temp[2]/iterations),
               'temperature':(temp[3]/(3*iterations)),
               'humidity':(temp[4]/(3*iterations))}
-        
+    
     return values
 
-def vent_meas_cycle(vent_time=8, wait_time=3):
-    GPIO.output(27,True)
-    time.sleep(vent_time)
-    GPIO.output(27,False)
-    time.sleep(wait_time)
-    
-    return measure_airquality(5,0.5)
-
-# test class
 if __name__ == "__main__":
-    
+
     print('Air quality measurement station v1.1 (no GUI)')
     con = sqlite3.connect('device_data/airquality.db')
     print('Connected to airquality database')
     print('Press any key to close the program...')
-    
-    measure(con, 5)
-    
-    
+
+    format = "%(asctime)s: %(message)s"
+    logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
+
+    #### Start of the measurements
+    logging.info("Main    : Starting measurements.")
+
+    measure_airquality(con)
+
     #commit data and close the database
     con.close()
     GPIO.cleanup()
