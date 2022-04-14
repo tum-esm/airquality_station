@@ -29,8 +29,10 @@ class ec_sensor:
                                 bytesize = serial.EIGHTBITS,
                                 timeout = 1)
             
+            sleep(0.1) # sleep before continue
             # get sensor information
             self.ser.write(b'\xD1')
+            sleep(0.01)
             info_bin = list(self.ser.read(8))
 
             self.sensor_type = self.types[hex(info_bin[0])] 
