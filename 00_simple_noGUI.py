@@ -107,8 +107,15 @@ class measure_airquality:
         self.con.commit() # safe data in database
 
         # make logging message
-        logging.info("NO2: {0:.4f} ppm | O3: {0:.4f}  ppb | CO: {0:.4f} ppm".format(dat['NO2'], dat['O3'], dat['CO']))
-
+        logging.info("New Measurement")
+        print("---")
+        print("|      NO2    : {0:.4f} ppm".format(dat['NO2']))
+        print("|      O3     : {0:.4f} ppb".format(dat['O3']))
+        print("|      CO     : {0:.4f} ppm".format(dat['CO']))
+        print("| Temperature : {0:.1f} °C".format(dat['temperature']))
+        print("|   Humidity  : {0:.1f} rH".format(dat['humidity']))
+        print("---\n")
+      
     def __del__(self):
         """
             Description: Destructor; close db connection and cleanup GPIOs
@@ -125,10 +132,8 @@ if __name__ == "__main__":
     format = "%(asctime)s: %(message)s"
     logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
 
-    e = threading.Event()
-
     #### Start of the measurements
-    print('\n\n Start logging...')
+    print('\n\nStart logging...')
     logging.info("Main    : Starting measurements.")
 
     measurement_obj = measure_airquality(db_path = 'device_data/airquality.db')
@@ -137,9 +142,8 @@ if __name__ == "__main__":
     while loop_forever:
         try:
             measurement_obj.measure()
-            e.wait(timeout= 30)
+            time.sleep(30)
         except KeyboardInterrupt:
-            e.set()
             loop_forever = False
 
     del measurement_obj
