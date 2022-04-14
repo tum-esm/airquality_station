@@ -2,7 +2,10 @@
 Raspberry pi code for the practical course "NOx sensor station".
 
 # Initial raspberry setup
-The station uses three UART ports on the Raspberry pi. They need to be activated in the raspberry config file: 
+The following describes how the Rpi4 with a fresh SD-card should be set up to make the station work. Following steps are important: 
+- Enable three UART ports to connect to the sensors
+- Rotate the screen and touch input on HDMI1 
+- Install all python packages necessary to run the application
 
 ### Activate UART Ports
 1. open the config file with 'sudo nano /boot/config.txt'
@@ -16,3 +19,7 @@ Since the display is rotated 180° one has to invert the display and then touch 
 1. Open the raspberry pi screen utilities
 2. invert the screen
 3. Follow this instruction (link instruction) to invert the touch input. 
+
+### Install python packages
+1. If pip is not installed (check with `pip --version`) install pip with `sudo apt-get install pip`
+2. Install with poetry with `pip install poetry`
