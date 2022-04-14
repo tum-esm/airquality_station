@@ -110,19 +110,20 @@ if __name__ == "__main__":
     logging.info("Main    : Starting measurements.")
 
     # shut run as a thread we are waiting for
-    meas = th.Thread(target=measure_airquality, args=(con,))
+    #meas = th.Thread(target=measure_airquality, args=(con,))
 
     loop_forever = True
     while loop_forever:
         try:
-            meas.start()
+            measure_airquality(con)
             time.sleep(10)
         except KeyboardInterrupt:
-            meas.join()
+            #meas.join()
             loop_forever = False
 
     #commit data and close the database
     con.close()
+
     GPIO.cleanup()
     
     print("Program end") 
