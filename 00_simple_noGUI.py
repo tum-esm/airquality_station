@@ -17,7 +17,7 @@ from ec_sense import ec_sensor
 
 class measure_airquality: 
 
-    def __init__(db_connection, self):
+    def __init__(self):
         #set GPIO
         GPIO.setwarnings(False)
         GPIO.setmode(GPIO.BCM)
@@ -29,7 +29,9 @@ class measure_airquality:
         self.ec3 = ec_sensor('/dev/ttyAMA2') #CO Sensor
 
         # connect to database
-        self.cursor = db_connection.cursor()
+        self.con = sqlite3.connect('device_data/airquality.db')
+        print('Connected to airquality database')
+        self.cursor = self.con.cursor()
 
     def measure(self):
         """
@@ -57,7 +59,7 @@ class measure_airquality:
                         (timestamp, dat['CO'], 'ppm',
                         dat['temperature'], dat['humidity']))
         
-        self.db_connection.commit() # safe data in database
+        self.con.commit() # safe data in database
 
         # make logging message
         logging.info("NO2: {0:.4f} ppm | O3: {0:.4f}  ppb | CO: {0:.4f} ppm".format(dat['NO2'], dat['O3'], dat['CO']))
@@ -98,11 +100,7 @@ class measure_airquality:
 
 if __name__ == "__main__":
 
-
-
     print('Air quality measurement station v1.1 (no GUI)')
-    con = sqlite3.connect('device_data/airquality.db')
-    print('Connected to airquality database')
     print('Press Ctrl+C to close the program...')
 
     format = "%(asctime)s: %(message)s"
@@ -111,7 +109,7 @@ if __name__ == "__main__":
     #### Start of the measurements
     logging.info("Main    : Starting measurements.")
 
-    sensors = measure_airquality(con)
+    sensors = measure_airquality()
 
     loop_forever = True
     while loop_forever:
