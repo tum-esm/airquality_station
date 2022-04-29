@@ -53,7 +53,7 @@ class EcSensor:
                 print('Cannot connect to the device')
         
    
-    def read_value(self, delay = 0.02):
+    def read_single_value(self, delay = 0.02):
         """
             Description: Sensor single readout of gas concentration, temperature and humidity
             Parameters: delay - determines delay between write and read command. default = 0.01s
@@ -84,7 +84,7 @@ class EcSensor:
         return [gas_concentration, temperature, humidity]
 
 
-    def bulk_readout(self, delay, iterations):
+    def read_bulk_values(self, delay, iterations):
         """
             Description: Multiple sensor readout -> returns average value 
             Parameters: delay - determines delay between each iteration
@@ -99,12 +99,12 @@ class EcSensor:
         for i in range(0,iterations):
             
             # read out sensor value
-            dat = self.read_sensor(delay= 0.01)
+            var = self.read_sensor(delay= 0.01)
              
             # add measured value 
-            concentration = concentration + dat[0]
-            temperature = temperature + dat[1]
-            humidity = humidity + dat[2]
+            concentration += var[0]
+            temperature += var[1]
+            humidity += var[2]
             
             # sleep for defined time
             sleep(delay)
@@ -117,14 +117,14 @@ class EcSensor:
         
         return [concentration, temperature, humidity]
     
-    def led_status(self,status_true):
-        if status_true:
-            #write LED off
+    def change_led_status(self, status):
+        if status:
+            #write LED on
             self.ser.write(b'\xFF\x01\x89\x00\x00\x00\x00\x00\x76')
         else:
             #write LED off
             self.ser.write(b'\xFF\x01\x88\x00\x00\x00\x00\x00\x77')
-            
+
         #flush buffer
         self.ser.flush()
         
@@ -140,18 +140,18 @@ class EcSensor:
 # test class
 if __name__ == "__main__":
     port = '/dev/ttyS0'
-    ec = ECSensor(port)
+    sensor = EcSensor(port)
     
-    print('{} Sensor at port {}'.format(ec.sensor_type, port))
-    print("Maximal value: {}{}".format(ec.max_value, ec.unit))
+    print('{} Sensor at port {}'.format(sensor.sensor_type, port))
+    print("Maximal value: {}{}".format(sensor.max_value, sensor.unit))
     
-    dat = ec.bulk_readout(0.1, 10)
+    dat = sensor.read_bulk_values(0.1, 10)
     
     print('\nMeasured values:')
-    print('Gas concentration: {0:.4f}'.format(dat[0])+ec.unit)
+    print('Gas concentration: {0:.4f}'.format(dat[0])+sensor.unit)
     print('Temperature: {0:.1f} °C'.format(dat[1]))
     print('Humidity: {0:.1f} %rH'.format(dat[2]))
     
-    ec.led_status(False)
+    #sensor.led_status(change_led_status)
     
     del ec
