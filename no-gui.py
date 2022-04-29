@@ -16,7 +16,7 @@ import sqlite3
 import threading
 
 from datetime import datetime
-from ec_sense import ec_sensor
+from ecsense import ECSensor
 
 class measure_airquality: 
 
@@ -31,9 +31,9 @@ class measure_airquality:
         GPIO.setup(27,GPIO.OUT)
 
         #init sensors and serial ports
-        self.ec1 = ec_sensor('/dev/ttyS0') #No2 Sensor
-        self.ec2 = ec_sensor('/dev/ttyAMA1') #O3 Sensor
-        self.ec3 = ec_sensor('/dev/ttyAMA2') #CO Sensor
+        self.ec1 = ECSensor('/dev/ttyS0') #No2 Sensor
+        self.ec2 = ECSensor('/dev/ttyAMA1') #O3 Sensor
+        self.ec3 = ECSensor('/dev/ttyAMA2') #CO Sensor
 
         # connect to database
         self.con = sqlite3.connect(db_path)
