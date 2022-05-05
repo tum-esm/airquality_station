@@ -73,7 +73,7 @@ class MeasureAirquality:
         """
             Description: measure gas concentration in a loop and save measured values in database
         """
-        logging.info("Main    : Starting measurements: ")
+        logging.info("Main    : Starting measurements")
 
         insert_query = """INSERT INTO {} (timestamp, value, unit, temperature, humidity)
                                                       VALUES(?,?,?,?,?)"""
@@ -96,11 +96,11 @@ class MeasureAirquality:
                 # make logging message
                 logging.info("New Measurement")
                 print("---")
-                print("|      NO2    : {0:.4f} ppm".format(dat['NO2']))
-                print("|      O3     : {0:.4f} ppb".format(dat['O3']))
-                print("|      CO     : {0:.4f} ppm".format(dat['CO']))
-                print("| Temperature : {0:.1f} °C".format(dat['temperature']))
-                print("|   Humidity  : {0:.1f} rH".format(dat['humidity']))
+                print("|      NO2    : {0:.4f} ppm".format(var['NO2']))
+                print("|      O3     : {0:.4f} ppb".format(var['O3']))
+                print("|      CO     : {0:.4f} ppm".format(var['CO']))
+                print("| Temperature : {0:.1f} °C".format(var['temperature']))
+                print("|   Humidity  : {0:.1f} rH".format(var['humidity']))
                 print("---\n")
 
                 execution_ended_at = datetime.now().timestamp()
