@@ -27,7 +27,7 @@ if __name__ == "__main__":
         [gas_concentration, temperature, humidity] = sensor.read()
 
         print('\n|>------------------------------')
-        print('|> {} Sensor on port {}'.format(sensor.sensor_type, sensor.port))
+        print('|> {} Sensor'.format(sensor.sensor_type))
         print('|> Gas concentration: {0:.4f}'.format(gas_concentration) + sensor.unit)
         print('|> Temperature: {0:.1f} °C'.format(temperature))
         print('|> Humidity: {0:.1f} %rH'.format(humidity))
