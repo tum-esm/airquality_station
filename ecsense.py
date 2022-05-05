@@ -8,8 +8,6 @@ Description: This class can be used to read ec sensors via UART on a Raspberry p
 
 import serial
 from time import sleep
-from tenacity import retry
-
 
 class EcSensor:
     # sensor types used in the project can be read out
@@ -23,8 +21,7 @@ class EcSensor:
             Initializes variables
         """
 
-        @retry(wait=wait_fixed(1), stop=stop_after_attempts(10))
-        def connect(port):
+        for i in range(0,10): # perform 10 retries if it does not connect
             try:
                 # connect to sensor
                 self.ser = serial.Serial(port,
@@ -48,12 +45,14 @@ class EcSensor:
 
                 #flush buffer
                 self.ser.flush()
+                break
 
-            except serial.SerialException:
-                print('Cannot connect to the device')
-        
-   
-    def read_single_value(self, delay = 0.02):
+            except:
+                print('Cannot connect to the device. Attempt {}'.format(i))
+                sleep(0.5)
+
+
+    def read_single_value(self, delay = 0.1):
         """
             Description: Sensor single readout of gas concentration, temperature and humidity
             Parameters: delay - determines delay between write and read command. default = 0.01s
@@ -62,19 +61,17 @@ class EcSensor:
         
         # Gas concentration, temperature and humidity readout -> Check datasheet fore information
         self.ser.write(b'\xFF\x00\x87\x00\x00\x00\x00\x00\x79')
-        
+
         # Sleep for defined time before reading the sensor
         sleep(delay)
-        
+
         # read sensor value
         readout = self.ser.read(13)
         
         # convert gas concentration
-        gas_concentration =  ((readout[7] << 8) + readout[8]) / pow(10,self.decimal)
-
+        gas_concentration =  ((readout[7] << 8) + readout[8]) / pow(10, self.decimal)
         # convert temperature
         temperature = ((readout[9] << 8)+ readout[10]) / 100
-        
         # convert humidity
         humidity = ((readout[11] << 8)+ readout[12]) / 100
 
@@ -99,7 +96,7 @@ class EcSensor:
         for i in range(0,iterations):
             
             # read out sensor value
-            var = self.read_sensor(delay= 0.01)
+            var = self.read_single_value()
              
             # add measured value 
             concentration += var[0]
@@ -113,10 +110,10 @@ class EcSensor:
         concentration = concentration/iterations
         humidity = humidity/iterations
         temperature = temperature/iterations
-        
-        
+
         return [concentration, temperature, humidity]
-    
+
+
     def change_led_status(self, status):
         if status:
             #write LED on
@@ -139,6 +136,8 @@ class EcSensor:
         
 # test class
 if __name__ == "__main__":
+
+    # test on port
     port = '/dev/ttyS0'
     sensor = EcSensor(port)
     
@@ -153,5 +152,5 @@ if __name__ == "__main__":
     print('Humidity: {0:.1f} %rH'.format(dat[2]))
     
     #sensor.led_status(change_led_status)
-    
+
     del ec
