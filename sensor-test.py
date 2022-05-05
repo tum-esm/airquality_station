@@ -3,6 +3,7 @@ Can be used to test the sensor and the ventilator
 """
 import RPi.GPIO as GPIO
 import ecsense
+import time
 
 # init ventilator GPIO
 GPIO.setwarnings(False)
