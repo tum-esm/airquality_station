@@ -52,7 +52,7 @@ class EcSensor:
                 sleep(0.5)
 
 
-    def read_single_value(self, delay = 0.1):
+    def read(self, delay = 0.1):
         """
             Description: Sensor single readout of gas concentration, temperature and humidity
             Parameters: delay - determines delay between write and read command. default = 0.01s
@@ -81,7 +81,7 @@ class EcSensor:
         return [gas_concentration, temperature, humidity]
 
 
-    def read_bulk_values(self, delay, iterations):
+    def read_bulk(self, delay, iterations):
         """
             Description: Multiple sensor readout -> returns average value 
             Parameters: delay - determines delay between each iteration
@@ -96,7 +96,7 @@ class EcSensor:
         for i in range(0,iterations):
             
             # read out sensor value
-            var = self.read_single_value()
+            var = self.read()
              
             # add measured value 
             concentration += var[0]
@@ -144,7 +144,7 @@ if __name__ == "__main__":
     print('{} Sensor at port {}'.format(sensor.sensor_type, port))
     print("Maximal value: {}{}".format(sensor.max_value, sensor.unit))
     
-    dat = sensor.read_bulk_values(0.1, 10)
+    dat = sensor.read_bulk(0.1, 10)
     
     print('\nMeasured values:')
     print('Gas concentration: {0:.4f}'.format(dat[0])+sensor.unit)
@@ -153,4 +153,4 @@ if __name__ == "__main__":
     
     #sensor.led_status(change_led_status)
 
-    del ec
+    del sensor
