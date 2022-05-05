@@ -5,7 +5,6 @@ import RPi.GPIO as GPIO
 import time
 import serial
 
-
 # init ventilator GPIO
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
@@ -74,7 +73,8 @@ if __name__ == "__main__":
     GPIO.output(27,True)
     time.sleep(1)
     GPIO.output(27,False)
-    
+
+
     print("Sensor test...")
     
     sensor_test('/dev/ttyS0')

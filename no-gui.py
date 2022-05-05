@@ -83,7 +83,7 @@ class MeasureAirquality:
             try:
                 execution_started_at = datetime.now().timestamp()
 
-                var = self.measurement_cycle(vent_time=10, wait_time=3, iterations=5)
+                var = self.measurement_cycle(vent_time=15, wait_time=2, iterations=5)
                 timestamp = datetime.now()
 
                 for gas in ["NO2", "O3", "CO"]:
@@ -97,7 +97,7 @@ class MeasureAirquality:
                 logging.info("New Measurement")
                 print("---")
                 print("|      NO2    : {0:.4f} ppm".format(var['NO2']))
-                print("|      O3     : {0:.4f} ppb".format(var['O3']))
+                print("|      O3     : {0:.4f} ppm".format(var['O3']))
                 print("|      CO     : {0:.4f} ppm".format(var['CO']))
                 print("| Temperature : {0:.1f} °C".format(var['temperature']))
                 print("|   Humidity  : {0:.1f} rH".format(var['humidity']))
@@ -131,7 +131,7 @@ if __name__ == "__main__":
     print('\n\nStart logging...')
 
     measurement_obj = MeasureAirquality(db_path = 'device_data/airquality.db')
-    measurement_obj.measure()
+    measurement_obj.measure(time_between_cycles = 45)
 
     del measurement_obj
     #### End of Measurements
