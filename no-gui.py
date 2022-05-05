@@ -64,7 +64,7 @@ class MeasureAirquality:
                     self.ec_no2.sensor_type:con_no2,
                     self.ec_co.sensor_type:con_co,
                     'temperature':(temp_o3 + temp_co + temp_no2)/3,
-                    'humidity':(hum_o3, hum_no2, hum_co)/3}
+                    'humidity':(hum_o3+ hum_no2+ hum_co)/3}
 
         return values
 
@@ -73,7 +73,7 @@ class MeasureAirquality:
         """
             Description: measure gas concentration in a loop and save measured values in database
         """
-        logging.info("Main    : Starting measurements: {}".format(datetime.now()))
+        logging.info("Main    : Starting measurements: ")
 
         insert_query = """INSERT INTO {} (timestamp, value, unit, temperature, humidity)
                                                       VALUES(?,?,?,?,?)"""
