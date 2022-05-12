@@ -1,6 +1,5 @@
 # Data storage
-This folder holds an empty sqlite database, which holds the 
-measurement data. Please do not push any data to the repository.
+This folder holds a sqlite database, where all the data is stored. 
 
 ### Build database
 Use the db_init script to build the database in this folder. 
