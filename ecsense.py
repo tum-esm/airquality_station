@@ -23,9 +23,13 @@ class EcSensor:
 
         for i in range(0,10): # perform 10 retries if it does not connect
             try:
-                # connect to sensor
-                # TODO -> Check the datasheet and update he serial settings
-                self.ser = serial.Serial(#ADD SETTINGS HERE)
+                # TODO -> Check the datasheet for connection settings. Set the right baudrate in the function below.
+                # For more information about the library check https://pyserial.readthedocs.io/en/latest/pyserial.html
+                self.ser = serial.Serial(port, baudrate = 0, 
+                                    parity = serial.PARITY_NONE,
+                                    stopbits = serial.STOPBITS_ONE,
+                                    bytesize = serial.EIGHTBITS,
+                                    timeout = 1)
 
                 sleep(0.1) # sleep before continue
 
@@ -55,9 +59,9 @@ class EcSensor:
             Return: list of floats containing the sensor values in the following order: gas, temperature, humidity
         """
         
-        # TODO: Check the datasheet and add the read command below. 
-        # Gas concentration, temperature and humidity readout -> Check datasheet for information
-        self.ser.write(#ADD READ COMMAND HERE)
+        # TODO: Check the datasheet and add update the command below
+        # The command is the same for all sensors -> Hint: check Command 6 
+        self.ser.write(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00')
 
         # Sleep for defined time before reading the sensor
         sleep(delay)
