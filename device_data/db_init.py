@@ -1,15 +1,19 @@
 '''
-short script to initialize sqlite3 database
+Initialize the sqlite3 database of the airquality station.
 '''
 import sqlite3
 
 
 def init_db():
+    '''
+    Method to initialize a sqlite database for the airquality measurement station.
+    '''
+
     try:
-        sqliteConnection = sqlite3.connect('airquality.db')
-        cursor = sqliteConnection.cursor()
+        sqlite_connection = sqlite3.connect('airquality.db')
+        cursor = sqlite_connection.cursor()
         print('Established connection to SQLite')
-        
+
         table_no2 = ''' CREATE TABLE NO2 (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     timestamp timestamp NOT NULL,
@@ -18,7 +22,7 @@ def init_db():
                     temperature REAL NOT NULL,
                     humidity REAL NOT NULL); 
                 '''
-        
+
         table_o3 = ''' CREATE TABLE O3 (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     timestamp timestamp NOT NULL,
@@ -27,7 +31,7 @@ def init_db():
                     temperature REAL NOT NULL,
                     humidity REAL NOT NULL); 
                 '''
-        
+
         table_co = ''' CREATE TABLE CO (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     timestamp timestamp NOT NULL,
@@ -38,21 +42,23 @@ def init_db():
                 '''
         cursor.execute(table_no2)
         print('Created table NO2')
-        
+
         cursor.execute(table_o3)
         print('Created table O3')
-        
+
         cursor.execute(table_co)
         print('Created table CO')
-        
+
         cursor.close()
 
     except sqlite3.Error as error:
-        print('Error while initializing SQlite', error)
+        print('Error while initializing SQlite database', error)
     finally:
-        if sqliteConnection:
-            sqliteConnection.close()
+        if sqlite_connection:
+            sqlite_connection.close()
             print('SQLite connection closed')
-    
-if __name__=="__main__":
+
+
+
+if __name__ == "__main__":
     init_db()

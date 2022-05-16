@@ -7,17 +7,19 @@ Description: This script reads our sensors and saves the measured values in a
 sqlite database.
 """
 
-from socket import timeout
-import RPi.GPIO as GPIO
 import time
 import logging
 import sqlite3
-import threading
-
 from datetime import datetime
+
+import RPi.GPIO as GPIO
 from ecsense import EcSensor
 
+
 class MeasureAirquality:
+    """
+    Air-quality measurement class.
+    """
 
     def __init__(self, db_path):
         """
@@ -46,11 +48,11 @@ class MeasureAirquality:
             Description: ventilates measurement channel and reads out sensors
             Parameters: vent_time: ventilation time
                         wait_time: wait time after ventilation
-                        iterations: number of measurements that are averaged 
+                        iterations: number of measurements that are averaged
             Return: dict which holds the measured gas concentration, temperature and humidity
         """
 
-        # ventilate channel 
+        # ventilate channel
         GPIO.output(27,True)
         time.sleep(vent_time)
         GPIO.output(27,False)
@@ -96,11 +98,11 @@ class MeasureAirquality:
                 # make logging message
                 logging.info("New Measurement")
                 print("---")
-                print("|      NO2    : {0:.4f} ppm".format(var['NO2']))
-                print("|      O3     : {0:.4f} ppm".format(var['O3']))
-                print("|      CO     : {0:.4f} ppm".format(var['CO']))
-                print("| Temperature : {0:.1f} °C".format(var['temperature']))
-                print("|   Humidity  : {0:.1f} rH".format(var['humidity']))
+                print(f"|      NO2    : {var['NO2']:.4f} ppm")
+                print(f"|      O3     : {var['O3']:.4f} ppm")
+                print(f"|      CO     : {var['CO']:.4f} ppm")
+                print(f"| Temperature : {var['temperature']:.1f} °C")
+                print(f"|   Humidity  : {var['humidity']:.1f} rH")
                 print("---\n")
 
                 execution_ended_at = datetime.now().timestamp()
@@ -124,7 +126,7 @@ if __name__ == "__main__":
     print('Air quality measurement station v1.1 (no GUI)')
     print('Press Ctrl+C to close the program...')
 
-    format = "%(asctime)s: %(message)s"
+    FORMAT = "%(asctime)s: %(message)s"
     logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
 
     ### Start of the measurements
@@ -135,4 +137,4 @@ if __name__ == "__main__":
 
     del measurement_obj
     #### End of Measurements
-    print("Program end") 
+    print("Program end")
