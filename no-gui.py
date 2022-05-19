@@ -12,14 +12,15 @@ import RPi.GPIO as GPIO
 import time
 import logging
 import sqlite3
-import threading
 
 from datetime import datetime
 from ecsense import EcSensor
+from db_client.stv_client import STVClient
+
 
 class MeasureAirquality:
 
-    def __init__(self, db_path):
+    def __init__(self, sensor_id):
         """
             Description: Constructor
             Parameters: db_path: path to sqlite3 database
@@ -36,8 +37,13 @@ class MeasureAirquality:
         self.ec_no2 = EcSensor('/dev/ttyAMA2') #NO2 Sensor
 
         # connect to database
-        self.con = sqlite3.connect(db_path)
-        self.cursor = self.con.cursor()
+        self.client = STVClient(
+        schema = {"sensor_id": "string", "sensor_type": "string", 
+                "timestamp": "datetime", "concentration": "float", 
+                "temperature": "float", "humidity": "float"},
+        database_name = "airquality_course",
+        table_name = "device_data",
+        )
         print('Connected to airquality database')
 
 
@@ -75,9 +81,6 @@ class MeasureAirquality:
         """
         logging.info("Main    : Starting measurements")
 
-        insert_query = """INSERT INTO {} (timestamp, value, unit, temperature, humidity)
-                                                      VALUES(?,?,?,?,?)"""
-
         loop_forever=True
         while loop_forever:
             try:
@@ -87,9 +90,11 @@ class MeasureAirquality:
                 timestamp = datetime.now()
 
                 for gas in ["NO2", "O3", "CO"]:
-                    self.cursor.execute(insert_query.format(gas),
-                                        (timestamp, var[gas], 'ppm',
-                                         var['temperature'], var['humidity']))
+                    self.client.insert_data(
+                        {"sensor_id": self.sensor_id, "sensor_type": gas,
+                        "timestamp": timestamp, "concentration": var[gas],
+                        "temperature": var["temperature"], "humidity":var["humidity"]}
+                        )
 
                 self.con.commit()  # safe data in database
 
@@ -115,7 +120,7 @@ class MeasureAirquality:
         """
             Description: Destructor; close db connection and cleanup GPIOs
         """
-        self.con.close()
+        del self.client()
         GPIO.cleanup()
 
 
@@ -130,7 +135,7 @@ if __name__ == "__main__":
     ### Start of the measurements
     print('\n\nStart logging...')
 
-    measurement_obj = MeasureAirquality(db_path = 'device_data/airquality.db')
+    measurement_obj = MeasureAirquality(sensor_id = "station_1")
     measurement_obj.measure(time_between_cycles = 45)
 
     del measurement_obj
