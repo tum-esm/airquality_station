@@ -25,6 +25,7 @@ class MeasureAirquality:
             Description: Constructor
             Parameters: db_path: path to sqlite3 database
         """
+        self._sensor_id = sensor_id
 
         #set GPIO
         GPIO.setwarnings(False)
@@ -32,17 +33,17 @@ class MeasureAirquality:
         GPIO.setup(27,GPIO.OUT)
 
         #init sensors and serial ports
-        self.ec_o3 = EcSensor('/dev/ttyS0') #O3 Sensor
-        self.ec_co = EcSensor('/dev/ttyAMA1') #CO Sensor
-        self.ec_no2 = EcSensor('/dev/ttyAMA2') #NO2 Sensor
+        self.ec_o3 = EcSensor('/dev/ttyAMA1') #O3 Sensor
+        self.ec_co = EcSensor('/dev/ttyAMA2') #CO Sensor
+        self.ec_no2 = EcSensor('/dev/ttyS0') #NO2 Sensor
 
         # connect to database
         self.client = STVClient(
         schema = {"sensor_id": "string", "sensor_type": "string", 
-                "timestamp": "datetime", "concentration": "float", 
-                "temperature": "float", "humidity": "float"},
+                 "concentration": "float", "temperature": "float",
+                 "humidity": "float"},
         database_name = "airquality_course",
-        table_name = "device_data",
+        table_name = "airquality_data",
         )
         print('Connected to airquality database')
 
@@ -65,10 +66,14 @@ class MeasureAirquality:
         [con_o3, temp_o3, hum_o3] = self.ec_o3.read_bulk(iterations=iterations, delay=0.2)
         [con_co, temp_co, hum_co] = self.ec_co.read_bulk(iterations=iterations, delay=0.2)
         [con_no2, temp_no2, hum_no2] = self.ec_no2.read_bulk(iterations=iterations, delay=0.2)
+        
+        conv_o3 = 1.96
+        conv_co = 1.15
+        conv_no2 = 1.88
 
-        values = {  self.ec_o3.sensor_type:(con_o3/1000), # convert o3 values to ppm
-                    self.ec_no2.sensor_type:con_no2,
-                    self.ec_co.sensor_type:con_co,
+        values = {  self.ec_o3.sensor_type:(con_o3*conv_o3), # convert o3 values from ppm to µg/m³
+                    self.ec_no2.sensor_type:(con_no2*1000)*conv_no2,
+                    self.ec_co.sensor_type:(con_co)*conv_co,
                     'temperature':(temp_o3 + temp_co + temp_no2)/3,
                     'humidity':(hum_o3+ hum_no2+ hum_co)/3}
 
@@ -91,19 +96,16 @@ class MeasureAirquality:
 
                 for gas in ["NO2", "O3", "CO"]:
                     self.client.insert_data(
-                        {"sensor_id": self.sensor_id, "sensor_type": gas,
-                        "timestamp": timestamp, "concentration": var[gas],
+                        {"sensor_id": self._sensor_id, "sensor_type": gas, "concentration": var[gas],
                         "temperature": var["temperature"], "humidity":var["humidity"]}
                         )
-
-                self.con.commit()  # safe data in database
 
                 # make logging message
                 logging.info("New Measurement")
                 print("---")
-                print("|      NO2    : {0:.4f} ppm".format(var['NO2']))
-                print("|      O3     : {0:.4f} ppm".format(var['O3']))
-                print("|      CO     : {0:.4f} ppm".format(var['CO']))
+                print("|      NO2    : {0:.2f} µg/m³".format(var['NO2']))
+                print("|      O3     : {0:.2f} µg/m³".format(var['O3']))
+                print("|      CO     : {0:.2f} mg/m³".format(var['CO']))
                 print("| Temperature : {0:.1f} °C".format(var['temperature']))
                 print("|   Humidity  : {0:.1f} rH".format(var['humidity']))
                 print("---\n")
@@ -120,7 +122,7 @@ class MeasureAirquality:
         """
             Description: Destructor; close db connection and cleanup GPIOs
         """
-        del self.client()
+        del self.client
         GPIO.cleanup()
 
 
@@ -136,7 +138,7 @@ if __name__ == "__main__":
     print('\n\nStart logging...')
 
     measurement_obj = MeasureAirquality(sensor_id = "station_1")
-    measurement_obj.measure(time_between_cycles = 45)
+    measurement_obj.measure(time_between_cycles = 15)
 
     del measurement_obj
     #### End of Measurements

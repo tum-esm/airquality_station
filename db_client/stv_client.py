@@ -77,7 +77,7 @@ class STVClient:
                     assert len(data[key]) < 32, "len(data[{key}]) >= 31 characters"
                 else:
                     assert isinstance(
-                        data[key], int | float
+                        data[key], float
                     ), f"type(data[{key}]) != number"
         except AssertionError as e:
             raise Exception(f"Invalid data format: {e}")
@@ -165,9 +165,9 @@ class STVClient:
                 + " VALUES "
                 + f"({date}, {hour}, {', '.join(['%s']*len(keys))})"
             )
-            print(
-                f"SQL statement: \"{sql_statement.replace('%s', '{}').format(*values)}\""
-            )
+            #print(
+            #    f"SQL statement: \"{sql_statement.replace('%s', '{}').format(*values)}\""
+            #)
             cursor.execute(sql_statement, values)
             self.connection.commit()
             assert cursor.rowcount == 1, "Row could not be inserted - reason unknown"

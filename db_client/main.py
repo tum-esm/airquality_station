@@ -12,7 +12,7 @@ def example_procedure():
     client = STVClient(
         schema={"sensor_id": "string", "y1": "float", "y2": "float"},
         database_name="airquality_course",
-        table_name="test_data",
+        table_name="test_data_moritz",
     )
 
     print("latest 10 records: ", client.get_latest_n_records(10))

@@ -48,7 +48,7 @@ class EcSensor:
                 break
 
             except:
-                print('Cannot connect to the device. Attempt {}'.format(i))
+                print('Cannot connect to port {}. Attempt {}'.format(port,i))
                 sleep(0.5)
 
 
