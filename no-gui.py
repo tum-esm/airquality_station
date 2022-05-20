@@ -15,7 +15,7 @@ import sqlite3
 
 from datetime import datetime
 from ecsense import EcSensor
-from stv_client.client import STVClient
+from stv_client import STVClient
 
 
 class MeasureAirquality:
@@ -40,7 +40,7 @@ class MeasureAirquality:
         self.client = STVClient(
             database_name = "airquality_course",
             table_name = "device_data",
-            data_columns=["concentration", "temperature", "humidity"],
+            data_columns=["xco", "xno2", "xo3", "temperature", "humidity"],
         )
         print('Connected to airquality database')
 
@@ -85,16 +85,16 @@ class MeasureAirquality:
                 execution_started_at = datetime.now().timestamp()
 
                 var = self.measurement_cycle(vent_time=15, wait_time=2, iterations=5)
-
-                for gas in ["NO2", "O3", "CO"]:
-                    self.client.insert_data(
-                        f"{self.sensor_id}_{gas}",
-                        {
-                            "concentration": var[gas],
-                            "temperature": var["temperature"],
-                            "humidity":var["humidity"]
-                        }
-                    )
+                self.client.insert_data(
+                    f"{self.sensor_id}",
+                    {
+                        "xco": var["O3"],
+                        "xno2": var["NO2"],
+                        "xco": var["CO"],
+                        "temperature": var["temperature"],
+                        "humidity":var["humidity"]
+                    }
+                )
 
                 self.con.commit()  # safe data in database
 
