@@ -8,9 +8,8 @@ authors = ["Moritz Makowski <moritz.makowski@tum.de>"]
 python = "3.9"
 mysql-connector-python = "^8.0.29"
 jupyter = "^1.0.0"
-pyserial = "^3.5"
-serial = "^0.0.97"
 "RPi.GPIO" = "^0.7.1"
+pyserial = "^3.5"
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"

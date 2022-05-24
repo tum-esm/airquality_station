@@ -37,21 +37,29 @@ class MeasureAirquality:
         self.ec_co = EcSensor('/dev/ttyAMA2') #CO Sensor
         self.ec_no2 = EcSensor('/dev/ttyS0') #NO2 Sensor
 
-        # connect to database
-
+        # Client für Stickoxide
         self.client = STVClient(
             database_name="airquality_course",
             table_name="Stickoxide",
             data_columns=["no2"],
             units={"no2": "µg/m³"},
-            descriptions={"no2": "Stickoxid Sensor Messwert"},
+            descriptions={"no2": "Sensorwert Stickoxide"},
+            print_stuff=False,
+        )
+        # Client für alle Sensorwerte
+        self.client_verbose = STVClient(
+            database_name="airquality_course",
+            table_name="Messwerte",
+            data_columns=["no2", "co", "o3", "temperatur", "luftfeuchtigkeit"],
+            units={"no2": "µg/m³", "co": "mg/m³","o3": "µg/m³", "temperatur": "°C", "luftfeuchtigkeit": "%rH"},
+            descriptions={"no2": "Stickstoffdioxid", "co": "Kohlenmonoxid", "o3": "Ozon"},
             print_stuff=False,
         )
         
         print('Connected to airquality database')
 
 
-    def measurement_cycle(self, vent_time=2, wait_time=2, iterations=5) -> dict:
+    def measurement_cycle(self, vent_time=5, wait_time=2, iterations=5) -> dict:
         """
             Description: ventilates measurement channel and reads out sensors
             Parameters: vent_time: ventilation time
@@ -74,9 +82,9 @@ class MeasureAirquality:
         conv_co = 1.15
         conv_no2 = 1.88
 
-        values = {  self.ec_o3.sensor_type:(con_o3*conv_o3), # convert o3 values from ppm to µg/m³
-                    self.ec_no2.sensor_type:(con_no2*1000)*conv_no2,
-                    self.ec_co.sensor_type:(con_co)*conv_co,
+        values = {  self.ec_o3.sensor_type:(con_o3*conv_o3), # convert o3 values from ppb to µg/m³
+                    self.ec_no2.sensor_type:(con_no2*1000)*conv_no2, # convert no2 values from ppm to µg/m³
+                    self.ec_co.sensor_type:(con_co)*conv_co, # convert co values from ppm to mg/m³
                     'temperature':(temp_o3 + temp_co + temp_no2)/3,
                     'humidity':(hum_o3+ hum_no2+ hum_co)/3}
 
@@ -96,6 +104,10 @@ class MeasureAirquality:
 
                 var = self.measurement_cycle(vent_time=5, wait_time=2, iterations=5)
                 self.client.insert_data(self._sensor_id, {"no2": var["NO2"]})
+                self.client_verbose.insert_data(self._sensor_id,
+                                                {"no2" : var["NO2"], "co" : var["CO"], "o3" : var["O3"],
+                                                 "temperatur" : var["temperature"],
+                                                 "luftfeuchtigkeit" : var["humidity"]})
            
                 # make logging message
                 logging.info("New Measurement")
@@ -120,6 +132,7 @@ class MeasureAirquality:
             Description: Destructor; close db connection and cleanup GPIOs
         """
         del self.client
+        del self.client_verbose
         GPIO.cleanup()
 
 
