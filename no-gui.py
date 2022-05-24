@@ -38,11 +38,16 @@ class MeasureAirquality:
         self.ec_no2 = EcSensor('/dev/ttyS0') #NO2 Sensor
 
         # connect to database
+
         self.client = STVClient(
-            database_name = "airquality_course",
-            table_name = "device_data",
-            data_columns=["xco", "xno2", "xo3", "temperature", "humidity"],
+            database_name="airquality_course",
+            table_name="Stickoxide",
+            data_columns=["no2"],
+            units={"no2": "µg/m³"},
+            descriptions={"no2": "Stickoxid Sensor Messwert"},
+            print_stuff=False,
         )
+        
         print('Connected to airquality database')
 
 
@@ -89,18 +94,9 @@ class MeasureAirquality:
             try:
                 execution_started_at = datetime.now().timestamp()
 
-                var = self.measurement_cycle(vent_time=15, wait_time=2, iterations=5)
-                self.client.insert_data(
-                    f"{self.sensor_id}",
-                    {
-                        "xco": var["O3"],
-                        "xno2": var["NO2"],
-                        "xco": var["CO"],
-                        "temperature": var["temperature"],
-                        "humidity":var["humidity"]
-                    }
-                )
-
+                var = self.measurement_cycle(vent_time=5, wait_time=2, iterations=5)
+                self.client.insert_data(self._sensor_id, {"no2": var["NO2"]})
+           
                 # make logging message
                 logging.info("New Measurement")
                 print("---")
