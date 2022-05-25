@@ -44,6 +44,8 @@ class MeasureAirquality:
             data_columns=["no2"],
             units={"no2": "µg/m³"},
             descriptions={"no2": "Sensorwert Stickoxide"},
+            minimums={"no2": 0},
+            decimal_placess={"no2": 1},
             print_stuff=False,
         )
         # Client für alle Sensorwerte
@@ -53,6 +55,8 @@ class MeasureAirquality:
             data_columns=["no2", "co", "o3", "temperatur", "luftfeuchtigkeit"],
             units={"no2": "µg/m³", "co": "mg/m³","o3": "µg/m³", "temperatur": "°C", "luftfeuchtigkeit": "%rH"},
             descriptions={"no2": "Stickstoffdioxid", "co": "Kohlenmonoxid", "o3": "Ozon"},
+            minimums={"no2": 0, "co": 0, "o3": 0, "luftfeuchtigkeit": 0},
+            decimal_placess={"no2": 1, "co": 2, "o3": 1, "temperatur": 1, "luftfeuchtigkeit": 1},
             print_stuff=False,
         )
         
@@ -147,7 +151,7 @@ if __name__ == "__main__":
     ### Start of the measurements
     print('\n\nStart logging...')
 
-    measurement_obj = MeasureAirquality(sensor_id = "station_1")
+    measurement_obj = MeasureAirquality(sensor_id = "node 1")
     measurement_obj.measure(time_between_cycles = 15)
 
     del measurement_obj
