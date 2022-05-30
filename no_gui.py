@@ -126,7 +126,7 @@ if __name__ == "__main__":
     print('Air quality measurement station v1.1 (no GUI)')
     print('Press Ctrl+C to close the program...')
 
-    FORMAT = "%(asctime)s: %(message)s"
+    format = "%(asctime)s: %(message)s"
     logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
 
     ### Start of the measurements
