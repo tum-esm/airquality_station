@@ -32,31 +32,32 @@ class MeasureAirquality:
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(27,GPIO.OUT)
 
-        #init sensors and serial ports
+        # TODO: Possibly swap connections
+        # init sensors and serial ports
         self.ec_o3 = EcSensor('/dev/ttyAMA1') #O3 Sensor
         self.ec_co = EcSensor('/dev/ttyAMA2') #CO Sensor
         self.ec_no2 = EcSensor('/dev/ttyS0') #NO2 Sensor
 
         # Client für Stickoxide
         self.client = STVClient(
-            database_name="airquality_course",
-            table_name="Stickoxide",
+            database_name="stv_airquality_course",
+            table_name="sensor_node",
             data_columns=["no2"],
             units={"no2": "µg/m³"},
             descriptions={"no2": "Sensorwert Stickoxide"},
-            minimums={"no2": 0},
-            decimal_placess={"no2": 1},
+            minima={"no2": 0},
+            decimal_places={"no2": 1},
             print_stuff=False,
         )
         # Client für alle Sensorwerte
         self.client_verbose = STVClient(
-            database_name="airquality_course",
-            table_name="Messwerte",
+            database_name="stv_airquality_course",
+            table_name="sensor_node_verbose",
             data_columns=["no2", "co", "o3", "temperatur", "luftfeuchtigkeit"],
             units={"no2": "µg/m³", "co": "mg/m³","o3": "µg/m³", "temperatur": "°C", "luftfeuchtigkeit": "%rH"},
             descriptions={"no2": "Stickstoffdioxid", "co": "Kohlenmonoxid", "o3": "Ozon"},
-            minimums={"no2": 0, "co": 0, "o3": 0, "luftfeuchtigkeit": 0},
-            decimal_placess={"no2": 1, "co": 2, "o3": 1, "temperatur": 1, "luftfeuchtigkeit": 1},
+            minima={"no2": 0, "co": 0, "o3": 0, "luftfeuchtigkeit": 0},
+            decimal_places={"no2": 1, "co": 2, "o3": 1, "temperatur": 1, "luftfeuchtigkeit": 1},
             print_stuff=False,
         )
         
@@ -151,6 +152,7 @@ if __name__ == "__main__":
     ### Start of the measurements
     print('\n\nStart logging...')
 
+    # TODO: Adjust node name
     measurement_obj = MeasureAirquality(sensor_id = "node 1")
     measurement_obj.measure(time_between_cycles = 15)
 
