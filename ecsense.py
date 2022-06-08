@@ -27,7 +27,7 @@ class EcSensor:
 
         for i in range(0,10): # perform 10 retries if it does not connect
             try:
-                # TODO -> Check the datasheet for connection settings. Set the right baudrate in the
+                # TODO -> Check the datasheet and set the right baudrate in the
                 # function below.
                 # For more information about the library
                 # check https://pyserial.readthedocs.io/en/latest/pyserial.html
@@ -55,7 +55,7 @@ class EcSensor:
 
             except Exception as error_message:
                 print(f'Cannot connect to the device. Attempt {i}')#.format(i))
-                print("Error: " + error_message)
+                print("Error: " + str(error_message))
                 sleep(0.5)
 
 

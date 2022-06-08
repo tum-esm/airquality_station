@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     # Sensor test
     # Connect to all sensors using the EcSensor class and read their properties and values.
-    # Check ecsense.py (main function) how to instantiate and read the sensors.
+    # Check ecsense.py (if __name__ == "__main__") how to instantiate and read the sensors.
     # The sensors are connected to the following ports: '/dev/ttyS0', '/dev/ttyAMA1', '/dev/ttyAMA2'
 
     # TODO: Connect to sensor 1 on the first port
