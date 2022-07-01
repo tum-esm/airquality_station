@@ -24,14 +24,9 @@ class EcSensor:
             Establishes connection to sensor and checks the sensor type, unit and measurement range
             Initializes variables
         """
-
         for i in range(0,10): # perform 10 retries if it does not connect
             try:
-                # TODO -> Check the datasheet and set the right baudrate in the
-                # function below.
-                # For more information about the library
-                # check https://pyserial.readthedocs.io/en/latest/pyserial.html
-                self.ser = serial.Serial(port, baudrate = 0,
+                self.ser = serial.Serial(port, baudrate = 9600,
                                     parity = serial.PARITY_NONE,
                                     stopbits = serial.STOPBITS_ONE,
                                     bytesize = serial.EIGHTBITS,
@@ -54,11 +49,9 @@ class EcSensor:
                 break
 
             except Exception as error_message:
-                print(f'Cannot connect to the device. Attempt {i}')#.format(i))
+                print(f'Cannot connect to the device. Attempt {i}')
                 print("Error: " + str(error_message))
                 sleep(0.5)
-
-
 
 
     def read(self, delay = 0.1):
@@ -68,27 +61,15 @@ class EcSensor:
             Return: list of floats containing the sensor values in the following order: gas,
                     temperature, humidity
         """
-
-        # TODO: Check the datasheet and add update the command below
-        # The command is the same for all sensors -> Hint: check Command 6
-        self.ser.write(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00')
-
-        # Sleep for defined time before reading the sensor
+        self.ser.write(b'\xff\x01\x87\x00\x00\x00\x00\x00\x78')
         sleep(delay)
-
-        # read sensor value
         readout = self.ser.read(13)
 
-        # convert gas concentration
         gas_concentration =  ((readout[7] << 8) + readout[8]) / pow(10, self.decimal)
-        # convert temperature
         temperature = ((readout[9] << 8)+ readout[10]) / 100
-        # convert humidity
         humidity = ((readout[11] << 8)+ readout[12]) / 100
 
-        #flush buffer
-        self.ser.flush()
-
+        self.ser.flush() #flush serial buffer
         return [gas_concentration, temperature, humidity]
 
 
@@ -106,23 +87,16 @@ class EcSensor:
         temperature = 0
 
         for i in range(0,iterations):
-
-            # read out sensor value
-            var = self.read()
-
-            # add measured value
+            var = self.read() # read out sensor value
             concentration += var[0]
             temperature += var[1]
             humidity += var[2]
-
-            # sleep for defined time
             sleep(delay)
 
         # divide values by number of iterations
         concentration = concentration/iterations
         humidity = humidity/iterations
         temperature = temperature/iterations
-
         return [concentration, temperature, humidity]
 
 
@@ -131,13 +105,9 @@ class EcSensor:
         Change sensor led blinking status.
         """
         if status:
-            #write LED on
-            self.ser.write(b'\xFF\x01\x89\x00\x00\x00\x00\x00\x76')
+            self.ser.write(b'\xFF\x01\x89\x00\x00\x00\x00\x00\x76') #LED on
         else:
-            #write LED off
-            self.ser.write(b'\xFF\x01\x88\x00\x00\x00\x00\x00\x77')
-
-        #flush buffer
+            self.ser.write(b'\xFF\x01\x88\x00\x00\x00\x00\x00\x77') #LED off
         self.ser.flush()
 
 
@@ -154,7 +124,6 @@ if __name__ == "__main__":
 
     # test on defined port
     PORT = '/dev/ttyS0'
-
     sensor = EcSensor(PORT)
 
     print(f'{sensor.sensor_type} Sensor at port {PORT}')
@@ -166,8 +135,6 @@ if __name__ == "__main__":
     print(f'Gas concentration: {dat[0]:.4f}{sensor.unit}')
     print(f'Temperature: {dat[1]:.1f} °C')
     print(f'Humidity: {dat[2]:.1f} %rH')
-
-    #sensor.led_status(change_led_status)
 
     del sensor
     
