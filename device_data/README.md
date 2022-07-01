@@ -1,7 +1,7 @@
 # Data storage
-This folder holds a sqlite database, where all the data is stored. 
+In this folder the local database sqlite 3 database is located. </br>
+PLEASE DON'T PUSH DATA TO GITHUB
 
-### Build database
-Use the db_init script to build the database in this folder. 
-DB Browser for SQLite is my recommended tool to investigate 
-the content of the database.
+## How to initialize the database
+Use the `db_init.py` script to build the database in this folder. 
+DB Browser for SQLite is a tool recommended to investigate database contents.

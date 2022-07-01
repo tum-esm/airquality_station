@@ -116,3 +116,4 @@ if __name__ == "__main__":
     print(f'Humidity: {dat[2]:.1f} %rH')
 
     del sensor
+    
