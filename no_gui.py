@@ -7,18 +7,21 @@ Description: This script reads our sensors and saves the measured values in a
 sqlite database.
 """
 
-from socket import timeout
-import RPi.GPIO as GPIO
 import time
 import logging
 import sqlite3
-
 from datetime import datetime
+
+import RPi.GPIO as GPIO
 from ecsense import EcSensor
 from stv_client import STVClient
 
 
+
 class MeasureAirquality:
+    """
+    Air-quality measurement class.
+    """
 
     def __init__(self, sensor_id):
         """
@@ -69,11 +72,11 @@ class MeasureAirquality:
             Description: ventilates measurement channel and reads out sensors
             Parameters: vent_time: ventilation time
                         wait_time: wait time after ventilation
-                        iterations: number of measurements that are averaged 
+                        iterations: number of measurements that are averaged
             Return: dict which holds the measured gas concentration, temperature and humidity
         """
 
-        # ventilate channel 
+        # ventilate channel
         GPIO.output(27,True)
         time.sleep(vent_time)
         GPIO.output(27,False)
@@ -158,4 +161,4 @@ if __name__ == "__main__":
 
     del measurement_obj
     #### End of Measurements
-    print("Program end") 
+    print("Program end")
