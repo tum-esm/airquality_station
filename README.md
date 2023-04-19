@@ -20,6 +20,7 @@ The following describes how the Rpi4 with a fresh SD-card should be set up to ma
     enable_uart=1
     dtoverlay=uart2
     dtoverlay=uart3
+    dtoverlay=uart4
     ```
 3. Save and close the file with 'Str + x'
 4. Make sure that serial port 1 is not routed to the serial console. Check the raspberry pi config for this.
