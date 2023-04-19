@@ -1,9 +1,9 @@
 """
 Organization: Professorship of Environmental Sensing and Modelling, TU Munich
-Date: 08.03.2022
-Author: Daniel Kuehbacher
+Date: 19.04.2023
+Author: Julian Baertschi
 
-Description: This class can be used to read ec sensors via UART on a Raspberry pi.
+Description: This class can be used to read cozir sensors via UART on a Raspberry pi.
 """
 
 import serial
@@ -45,17 +45,20 @@ class CozirSensor:
     
     def read(self):
         """
-            Description: Sensor single readout of gas concentration, temperature and humidity
-            Parameters: delay - determines delay between write and read command. default = 0.01s
-            Return: list of floats containing the sensor values in the following order: gas, temperature, humidity
+            Description: Sensor single readout of gas concentration (filtered and unfiltered)
+            Parameters: None
+            Return: list of floats containing the sensor values in the following order: concentration_filtered, concentration_unfiltered
         """
         # Get measurment
         self.ser.read_until(self.eol)
         sensor_reading = self.ser.read_until(self.eol)
+
+        # Extract sensor readings
         concentration_filtered = int(sensor_reading[3:8])
         concentration_unfiltered = int(sensor_reading[11:16])
         
         sleep(0.1)
+
         #flush buffer
         self.ser.flush()
         
@@ -67,7 +70,7 @@ class CozirSensor:
             Description: Multiple sensor readout -> returns average value 
             Parameters: delay - determines delay between each iteration
                          iterations - determines number of iterations
-            Return: list of averaged sensor values in the following order: gas, temperature, humidity
+            Return: list of averaged sensor values in the following order: concentration_filtered, concentration_unfiltered
         """
         
         concentration_filtered = 0

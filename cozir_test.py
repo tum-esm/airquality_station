@@ -1,5 +1,5 @@
 """
-Can be used to test the sensor and the ventilator
+Can be used to test the cozir sensor
 """
 from time import sleep
 from cozir import CozirSensor
@@ -8,7 +8,7 @@ if __name__ == "__main__":
     print("<<< Test sensor. >>>")
     
     co2_sensor = CozirSensor('/dev/ttyAMA3')
-    sleep(0.1) # sleep before continue# get sensor information
+    sleep(0.1)
     
     # Get measurment 
     sensor_reading = co2_sensor.read()
