@@ -14,7 +14,7 @@ from datetime import datetime
 
 import RPi.GPIO as GPIO
 from ecsense import EcSensor
-
+from cozir import CozirSensor
 
 class MeasureAirquality:
     """
@@ -36,7 +36,8 @@ class MeasureAirquality:
         self.ec_o3 = EcSensor('/dev/ttyS0') #O3 Sensor
         self.ec_co = EcSensor('/dev/ttyAMA1') #CO Sensor
         self.ec_no2 = EcSensor('/dev/ttyAMA2') #NO2 Sensor
-
+        self.cozir_co2 = CozirSensor('/dev/ttyAMA3') #CO2 Sensor
+        
         # connect to database
         self.con = sqlite3.connect(db_path)
         self.cursor = self.con.cursor()
@@ -61,10 +62,12 @@ class MeasureAirquality:
         [con_o3, temp_o3, hum_o3] = self.ec_o3.read_bulk(iterations=iterations, delay=0.2)
         [con_co, temp_co, hum_co] = self.ec_co.read_bulk(iterations=iterations, delay=0.2)
         [con_no2, temp_no2, hum_no2] = self.ec_no2.read_bulk(iterations=iterations, delay=0.2)
-
+        [con_filtered, con_unfiltered] = self.cozir_co2.read_bulk(iterations=iterations, delay=0.2)
+        
         values = {  self.ec_o3.sensor_type:(con_o3/1000), # convert o3 values to ppm
                     self.ec_no2.sensor_type:con_no2,
                     self.ec_co.sensor_type:con_co,
+                    self.cozir_co2.sensor_type:con_filtered,
                     'temperature':(temp_o3 + temp_co + temp_no2)/3,
                     'humidity':(hum_o3+ hum_no2+ hum_co)/3}
 
@@ -85,10 +88,10 @@ class MeasureAirquality:
             try:
                 execution_started_at = datetime.now().timestamp()
 
-                var = self.measurement_cycle(vent_time=15, wait_time=2, iterations=5)
+                var = self.measurement_cycle(vent_time=5, wait_time=2, iterations=5)
                 timestamp = datetime.now()
 
-                for gas in ["NO2", "O3", "CO"]:
+                for gas in ["NO2", "O3", "CO", "CO2"]:
                     self.cursor.execute(insert_query.format(gas),
                                         (timestamp, var[gas], 'ppm',
                                          var['temperature'], var['humidity']))
@@ -101,6 +104,7 @@ class MeasureAirquality:
                 print(f"|      NO2    : {var['NO2']:.4f} ppm")
                 print(f"|      O3     : {var['O3']:.4f} ppm")
                 print(f"|      CO     : {var['CO']:.4f} ppm")
+                print(f"|      CO2    : {var['CO2']} ppm")
                 print(f"| Temperature : {var['temperature']:.1f} °C")
                 print(f"|   Humidity  : {var['humidity']:.1f} rH")
                 print("---\n")
@@ -127,13 +131,13 @@ if __name__ == "__main__":
     print('Press Ctrl+C to close the program...')
 
     FORMAT = "%(asctime)s: %(message)s"
-    logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
+    #logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
 
     ### Start of the measurements
     print('\n\nStart logging...')
 
     measurement_obj = MeasureAirquality(db_path = 'device_data/airquality.db')
-    measurement_obj.measure(time_between_cycles = 45)
+    measurement_obj.measure(time_between_cycles = 5)
 
     del measurement_obj
     #### End of Measurements

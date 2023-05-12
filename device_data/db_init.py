@@ -40,6 +40,16 @@ def init_db():
                     temperature REAL NOT NULL,
                     humidity REAL NOT NULL); 
                 '''
+        
+        table_co2 = ''' CREATE TABLE CO2 (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp timestamp NOT NULL,
+                    value REAL NOT NULL,
+                    unit char(3) NOT NULL,
+                    temperature REAL NOT NULL,
+                    humidity REAL NOT NULL); 
+                '''
+       
         cursor.execute(table_no2)
         print('Created table NO2')
 
@@ -48,6 +58,9 @@ def init_db():
 
         cursor.execute(table_co)
         print('Created table CO')
+
+        cursor.execute(table_co2)
+        print('Created table CO2')
 
         cursor.close()
 
