@@ -9,18 +9,20 @@ sqlite database.
 
 import time
 import logging
-import sqlite3
+import RPi.GPIO as GPIO
+import os
+import dotenv
 from datetime import datetime
 
-import RPi.GPIO as GPIO
 from ecsense import EcSensor
-from stv_client import STVClient
+from cozir import CozirSensor
 
+from tum_esm_signal import TUM_ESM_SignalClient
 
 
 class MeasureAirquality:
     """
-    Air-quality measurement class.
+    Air-quality measurement class.pip 
     """
 
     def __init__(self, sensor_id):
@@ -37,37 +39,68 @@ class MeasureAirquality:
 
         # TODO: Possibly swap connections
         # init sensors and serial ports
-        self.ec_o3 = EcSensor('/dev/ttyAMA1') #O3 Sensor
-        self.ec_co = EcSensor('/dev/ttyAMA2') #CO Sensor
-        self.ec_no2 = EcSensor('/dev/ttyS0') #NO2 Sensor
+        self.ec_o3 = EcSensor('/dev/ttyS0') #O3 Sensor
+        self.ec_co = EcSensor('/dev/ttyAMA1') #CO Sensor
+        self.ec_no2 = EcSensor('/dev/ttyAMA2') #NO2 Sensor
+        self.cozir_co2 = CozirSensor('/dev/ttyAMA3') #CO2 Sensor
+        
+        # intialize bias values
+        self.CO2_BIAS = -750
+        self.NO2_BIAS = 0
+        self.CO_BIAS = 0
+        self.O3_BIAS = 0
 
-        # Client für Stickoxide
-        self.client = STVClient(
-            database_name="stv_airquality_course",
-            table_name="sensor_node",
-            data_columns=["no2"],
-            units={"no2": "µg/m³"},
-            descriptions={"no2": "Sensorwert Stickoxide"},
-            minima={"no2": 0},
-            decimal_places={"no2": 1},
-            print_stuff=False,
+
+        dotenv.load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
+
+        SIGNAL_CLIENT_IDENTITY = os.getenv("TUM_ESM_SIGNAL_CMS_IDENTITY")
+        assert (
+            SIGNAL_CLIENT_IDENTITY is not None
+        ), "TUM_ESM_SIGNAL_CMS_IDENTITY environment variable not set"
+
+        SIGNAL_CLIENT_PASSWORD = os.getenv("TUM_ESM_SIGNAL_CMS_PASSWORD")
+        assert (
+            SIGNAL_CLIENT_PASSWORD is not None
+        ), "TUM_ESM_SIGNAL_CMS_PASSWORD environment variable not set"
+        
+
+        signal_client = TUM_ESM_SignalClient(
+            cms_identity = SIGNAL_CLIENT_IDENTITY,
+            cms_password = SIGNAL_CLIENT_PASSWORD,
+            collection_name = "automatica",
+            table_name = "airquality_sensor",
         )
-        # Client für alle Sensorwerte
-        self.client_verbose = STVClient(
-            database_name="stv_airquality_course",
-            table_name="sensor_node_verbose",
-            data_columns=["no2", "co", "o3", "temperatur", "luftfeuchtigkeit"],
-            units={"no2": "µg/m³", "co": "mg/m³","o3": "µg/m³", "temperatur": "°C", "luftfeuchtigkeit": "%rH"},
-            descriptions={"no2": "Stickstoffdioxid", "co": "Kohlenmonoxid", "o3": "Ozon"},
-            minima={"no2": 0, "co": 0, "o3": 0, "luftfeuchtigkeit": 0},
-            decimal_places={"no2": 1, "co": 2, "o3": 1, "temperatur": 1, "luftfeuchtigkeit": 1},
-            print_stuff=False,
+
+        # Client für CO2
+        self.co2_client = signal_client.connect_column(
+            column_name = "CO₂", unit = "ppm", description = "Carbon Dioxide",
+            minimum = 350, maximum = 5000, decimal_places = 0
+        )
+        self.temp_client = signal_client.connect_column(
+            column_name = "Temperature", unit = "°C",
+            minimum = 0, maximum = 50, decimal_places = 0
+        )
+        self.hum_client = signal_client.connect_column(
+            column_name = "Relative Humidity", unit = "% rH",
+            minimum = 0, maximum = 100, decimal_places = 0
+        )
+        self.o3_client = signal_client.connect_column(
+            column_name = "O₃", unit = "µg/m³", description = "Ozone",
+            minimum = 0, maximum = 500, decimal_places = 0
+        )
+        self.co_client = signal_client.connect_column(
+            column_name = "CO", unit = "mg/m³", description = "Carbon Monoxide",
+            minimum = 0, maximum = 20, decimal_places = 0
+        )
+        self.no2_client = signal_client.connect_column(
+            column_name = "NO₂", unit = "µg/m₃", description = "Nitrous Dioxide",
+            minimum = 0, maximum = 500, decimal_places = 0
         )
         
         print('Connected to airquality database')
 
 
-    def measurement_cycle(self, vent_time=5, wait_time=2, iterations=5) -> dict:
+    def measurement_cycle(self, vent_time, wait_time, iterations) -> dict:
         """
             Description: ventilates measurement channel and reads out sensors
             Parameters: vent_time: ventilation time
@@ -82,24 +115,32 @@ class MeasureAirquality:
         GPIO.output(27,False)
         time.sleep(wait_time)
 
-        [con_o3, temp_o3, hum_o3] = self.ec_o3.read_bulk(iterations=iterations, delay=0.2)
-        [con_co, temp_co, hum_co] = self.ec_co.read_bulk(iterations=iterations, delay=0.2)
-        [con_no2, temp_no2, hum_no2] = self.ec_no2.read_bulk(iterations=iterations, delay=0.2)
-        
+        [con_filtered, con_unfiltered] = self.cozir_co2.read_bulk(iterations=3, delay=0.5)
+        [con_o3, temp_o3, hum_o3] = self.ec_o3.read_bulk(iterations=iterations, delay=0.1)
+        [con_co, temp_co, hum_co] = self.ec_co.read_bulk(iterations=iterations, delay=0.1)
+        [con_no2, temp_no2, hum_no2] = self.ec_no2.read_bulk(iterations=iterations, delay=0.1)
+
         conv_o3 = 1.96
         conv_co = 1.15
         conv_no2 = 1.88
+        
+        # remove CO2 bias
+        co2_value = con_filtered + self.CO2_BIAS
+        if co2_value < 420:
+            self.CO2_BIAS += 420 - co2_value
+            logging.info(f"Updated CO2 Bias: {self.CO2_BIAS}")
 
-        values = {  self.ec_o3.sensor_type:(con_o3*conv_o3), # convert o3 values from ppb to µg/m³
-                    self.ec_no2.sensor_type:(con_no2*1000)*conv_no2, # convert no2 values from ppm to µg/m³
-                    self.ec_co.sensor_type:(con_co)*conv_co, # convert co values from ppm to mg/m³
-                    'temperature':(temp_o3 + temp_co + temp_no2)/3,
-                    'humidity':(hum_o3+ hum_no2+ hum_co)/3}
+        return {
+            self.ec_o3.sensor_type:(con_o3*conv_o3 + self.O3_BIAS), # convert o3 values from ppb to µg/m³
+            self.ec_no2.sensor_type:(con_no2*1000)*conv_no2 + self.NO2_BIAS, # convert no2 values from ppm to µg/m³
+            self.ec_co.sensor_type:(con_co)*conv_co + self.CO_BIAS, # convert co values from ppm to mg/m³
+            self.cozir_co2.sensor_type:con_filtered + self.CO2_BIAS,
+            'temperature':(temp_o3 + temp_co + temp_no2)/3,
+            'humidity':(hum_o3+ hum_no2+ hum_co)/3
+        }
 
-        return values
 
-
-    def measure(self, time_between_cycles = 30):
+    def measure(self, time_between_cycles):
         """
             Description: measure gas concentration in a loop and save measured values in database
         """
@@ -110,19 +151,28 @@ class MeasureAirquality:
             try:
                 execution_started_at = datetime.now().timestamp()
 
-                var = self.measurement_cycle(vent_time=5, wait_time=2, iterations=5)
+                var = self.measurement_cycle(vent_time=10, wait_time=1, iterations=5)
+                self.co2_client.add_datapoint("node_1", var['CO2'])
+                self.co_client.add_datapoint("node_1", var['CO'])
+                self.no2_client.add_datapoint("node_1", var['NO2'])
+                self.o3_client.add_datapoint("node_1", var['O3'])
+                self.temp_client.add_datapoint("node_1", var['temperature'])
+                self.hum_client.add_datapoint("node_1", var['humidity'])
+                
+                """
                 self.client.insert_data(self._sensor_id, {"no2": var["NO2"]})
                 self.client_verbose.insert_data(self._sensor_id,
                                                 {"no2" : var["NO2"], "co" : var["CO"], "o3" : var["O3"],
                                                  "temperatur" : var["temperature"],
                                                  "luftfeuchtigkeit" : var["humidity"]})
-           
+                """
                 # make logging message
                 logging.info("New Measurement")
                 print("---")
                 print("|      NO2    : {0:.2f} µg/m³".format(var['NO2']))
                 print("|      O3     : {0:.2f} µg/m³".format(var['O3']))
                 print("|      CO     : {0:.2f} mg/m³".format(var['CO']))
+                print("|      CO2    : {0:.2f} ppm".format(var['CO2']))
                 print("| Temperature : {0:.1f} °C".format(var['temperature']))
                 print("|   Humidity  : {0:.1f} rH".format(var['humidity']))
                 print("---\n")
