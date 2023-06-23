@@ -43,26 +43,40 @@ class CozirSensor:
                 sleep(0.5)
                 
     
-    def read(self):
+    def read(self) -> tuple[float, float]:
         """
             Description: Sensor single readout of gas concentration (filtered and unfiltered)
             Parameters: None
             Return: list of floats containing the sensor values in the following order: concentration_filtered, concentration_unfiltered
         """
-        # Get measurment
-        self.ser.read_until(self.eol)
-        sensor_reading = self.ser.read_until(self.eol)
 
-        # Extract sensor readings
-        concentration_filtered = int(sensor_reading[3:8])
-        concentration_unfiltered = int(sensor_reading[11:16])
+        unfiltered_value: float = 0
+        filtered_value: float = 0
+
+        try:
+            # Get measurment
+            #self.ser.read_until(self.eol)
+            self.ser.flush()
+            self.ser.write(b'z\r\n')
+            unfiltered_value_str = self.ser.read_until(self.eol).decode()
+            unfiltered_value = int(unfiltered_value_str[11:16])
+        except:
+            print("could not parse unfiltered value")
+        
+        try:
+            self.ser.flush()
+            self.ser.write(b'Z\r\n')
+            filtered_value_str = self.ser.read_until(self.eol).decode()
+            filtered_value = int(filtered_value_str[11:16])
+        except:
+            print("could not parse filtered value")
         
         sleep(0.1)
 
         #flush buffer
         self.ser.flush()
         
-        return [concentration_filtered, concentration_unfiltered]
+        return filtered_value, unfiltered_value
 
 
     def read_bulk(self, delay, iterations):
