@@ -1,3 +1,0 @@
-[submodule "stv_client"]
-	path = stv_client
-	url = https://github.com/tum-esm/shareable-timeseries-visualization
